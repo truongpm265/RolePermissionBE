@@ -14,6 +14,7 @@ import java.util.Set;
 @Entity
 public class Role {
     @Id
+    @Column(name = "name", unique = true)
     private String name;
 
     private String description;

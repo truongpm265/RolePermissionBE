@@ -5,6 +5,8 @@ import com.example.rolepermission.dto.response.UserResponse;
 import com.example.rolepermission.entity.Permission;
 import com.example.rolepermission.entity.Role;
 import com.example.rolepermission.entity.User;
+import com.example.rolepermission.repository.RoleRepository;
+import com.example.rolepermission.repository.UserRepository;
 import com.example.rolepermission.service.RoleService;
 import com.example.rolepermission.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,17 +16,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/excel")
@@ -32,10 +34,16 @@ public class ExcelController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private UserRepository userRepository;
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportToExcel() {
         List<User> users = userService.getAllUsers();
@@ -118,7 +126,6 @@ public class ExcelController {
                 for (Permission permission : role.getPermissions()) {
                     permmissionRoleString.append(permission.getName()).append(", ");
                 }
-                // Xóa dấu phẩy và khoảng trắng ở cuối chuỗi
                 if (permmissionRoleString.length() > 0) {
                     permmissionRoleString.setLength(permmissionRoleString.length() - 2);
                 }
@@ -145,5 +152,50 @@ public class ExcelController {
                     e.printStackTrace();
                 }
             }
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<String> importExcelFile(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("Please upload a file!", HttpStatus.BAD_REQUEST);
         }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Workbook workbook = new XSSFWorkbook(inputStream);
+            Sheet sheet = workbook.getSheetAt(0); // Lấy sheet đầu tiên từ file Excel
+
+            List<User> users = new ArrayList<>();
+
+            // Duyệt qua các dòng và đọc dữ liệu
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Bắt đầu từ dòng 1 vì dòng 0 là header
+                Row row = sheet.getRow(i);
+
+                if (row != null) {
+                    String username = row.getCell(1).getStringCellValue();
+                    String email = row.getCell(2).getStringCellValue();
+                    String roles = row.getCell(3).getStringCellValue();
+                    // Bạn có thể thêm logic để tạo User và lưu vào DB
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setEmail(email);
+                    user.setPassword(passwordEncoder.encode("123")); //config password
+                    Set<Role> roleSet = new HashSet<>();
+                    Role role = roleRepository.findByName(roles).orElse(null);
+                    roleSet.add(role);
+                    // Set roles cho user
+                    user.setRoles(roleSet);
+                    // Thêm User vào danh sách
+                    users.add(user);
+                }
+            }
+
+            // Xử lý danh sách người dùng lưu vào database
+            userRepository.saveAll(users);
+
+            return new ResponseEntity<>("File uploaded and processed successfully!", HttpStatus.OK);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error processing the file", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
