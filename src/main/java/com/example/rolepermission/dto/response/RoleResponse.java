@@ -1,6 +1,7 @@
 package com.example.rolepermission.dto.response;
 
 
+import com.example.rolepermission.entity.AppFunction;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,5 +15,5 @@ import java.util.Set;
 public class RoleResponse {
     String name;
     String description;
-    Set<PermissionResponse> permissions;
+    Set<AppFunctionResponse> functions;
 }

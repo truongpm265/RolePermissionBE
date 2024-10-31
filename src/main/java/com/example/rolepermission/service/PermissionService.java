@@ -5,6 +5,8 @@ import java.util.List;
 import com.example.rolepermission.dto.request.PermissionRequest;
 import com.example.rolepermission.dto.response.PermissionResponse;
 import com.example.rolepermission.entity.Permission;
+import com.example.rolepermission.exception.AppException;
+import com.example.rolepermission.exception.ErrorCode;
 import com.example.rolepermission.mapper.PermissionMapper;
 import com.example.rolepermission.repository.PermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +40,17 @@ public class PermissionService {
 
     public void delete(String permission) {
         permissionRepository.deleteById(permission);
+    }
+
+    public PermissionResponse update(String name, PermissionRequest request) {
+
+        Permission permission = permissionRepository.findByName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+
+        permission.setName(request.getName());
+
+        permission = permissionRepository.save(permission);
+
+        return permissionMapper.toPermissionResponse(permission);
     }
 }

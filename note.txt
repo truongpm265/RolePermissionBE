@@ -1,0 +1,5 @@
+Khi sử dụng scope thì gặp trường hợp nếu Function MANAGE_USER không có Permission EDIT Mà Function MANAGER_ROLE có Permission EDIT, mà role đó có cả 2 Permission thì
+	@PreAuthorize("hasAuthority('FUNCTION_MANAGE_USER') and hasAuthority('EDIT')") vẫn hoạt động vì thế Permission phải ghi cả function 
+		-> tại sao lại phải thêm permission trong khi nó sẽ fix cứng với function
+
+Khi tạo role mới có cần tạo thêm function mới cho nó không, ví dụ như role mới không có full quyền như admin mà chỉ có thể xem sửa, không thêm xóa được.

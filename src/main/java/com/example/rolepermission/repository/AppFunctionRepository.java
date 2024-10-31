@@ -1,12 +1,12 @@
 package com.example.rolepermission.repository;
 
-import com.example.rolepermission.entity.Permission;
+import com.example.rolepermission.entity.AppFunction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permission,String> {
-    Optional<Permission> findByName(String name);
+public interface AppFunctionRepository extends JpaRepository<AppFunction, Long> {
+    Optional<AppFunction> findByName(String name);
 }

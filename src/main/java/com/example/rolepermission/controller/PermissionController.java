@@ -2,11 +2,14 @@ package com.example.rolepermission.controller;
 
 
 import com.example.rolepermission.dto.request.PermissionRequest;
+import com.example.rolepermission.dto.request.UserUpdateRequest;
 import com.example.rolepermission.dto.response.PermissionResponse;
+import com.example.rolepermission.dto.response.UserResponse;
 import com.example.rolepermission.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +37,11 @@ public class PermissionController {
     ResponseEntity<String> delete(@PathVariable String permission){
         permissionService.delete(permission);
         return ResponseEntity.ok("Delete Successfully");
+    }
+
+    @PutMapping("/update/{name}")
+    ResponseEntity<PermissionResponse> updatePermission(@PathVariable String name, @RequestBody PermissionRequest request) {
+        return ResponseEntity.ok(permissionService.update(name, request));
     }
 
 }

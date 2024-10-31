@@ -2,8 +2,10 @@ package com.example.rolepermission.service;
 
 import com.example.rolepermission.dto.request.UserCreationRequest;
 import com.example.rolepermission.dto.request.UserUpdateRequest;
+import com.example.rolepermission.dto.response.UserDetailsDTO;
 import com.example.rolepermission.dto.response.UserResponse;
 
+import com.example.rolepermission.entity.AppFunction;
 import com.example.rolepermission.entity.Role;
 import com.example.rolepermission.entity.User;
 import com.example.rolepermission.exception.AppException;
@@ -14,11 +16,14 @@ import com.example.rolepermission.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -34,7 +39,6 @@ public class UserService {
     @Autowired
     UserMapper userMapper;
 
-    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -47,8 +51,7 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-//    @PreAuthorize("hasRole('USER')")
-    @PreAuthorize("hasAuthority('VIEW_DATA')")
+
     public List<UserResponse> getUsers() {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
@@ -59,7 +62,7 @@ public class UserService {
         .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
 
-    @PostAuthorize("hasAuthority('UPDATE_DATA')")
+
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -73,7 +76,7 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    @PreAuthorize("hasAuthority('DELETE_DATA')")
+
     public void deleteUser(Long userId){
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -84,5 +87,39 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
 
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
+    public User getUserDetails() {
+        User user = getCurrentUser();
+        return user;
+    }
+
+    public UserDetailsDTO getUserDetailsByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // Chuyển đổi thành UserDetailsDTO
+        List<String> roles = user.getRoles().stream()
+                .map(role -> role.getName()) // Giả sử bạn có phương thức getName() trong Role
+                .collect(Collectors.toList());
+
+        List<AppFunction> functions = user.getRoles().stream()
+                .flatMap(role -> role.getFunctions().stream()) // Lấy các function từ role
+                .distinct() // Loại bỏ duplicates
+                .map(appFunction -> new AppFunction(appFunction.getId(),appFunction.getName(), appFunction.getPermissions())) // Giả sử bạn có AppFunctionDTO
+                .collect(Collectors.toList());
+
+        return new UserDetailsDTO(username, roles, functions);
+    }
 }
