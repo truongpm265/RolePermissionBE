@@ -35,7 +35,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.create(request));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_ROLE')")
+//    @PreAuthorize("hasAuthority('VIEW_ROLE')")
     @GetMapping("/get-all")
     ResponseEntity<List<RoleResponse>> getAll(){
         return ResponseEntity.ok(roleService.getAllRoles());

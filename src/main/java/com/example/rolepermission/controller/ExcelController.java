@@ -166,6 +166,7 @@ public class ExcelController {
             Sheet sheet = workbook.getSheetAt(0); // Lấy sheet đầu tiên từ file Excel
 
             List<User> users = new ArrayList<>();
+            List<String> existingUsernames = new ArrayList<>(); // Danh sách lưu trữ username đã tồn tại
 
             // Duyệt qua các dòng và đọc dữ liệu
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -175,14 +176,22 @@ public class ExcelController {
                     String username = row.getCell(1).getStringCellValue();
                     String email = row.getCell(2).getStringCellValue();
                     String roles = row.getCell(3).getStringCellValue();
-                    // Bạn có thể thêm logic để tạo User và lưu vào DB
+
+                    if (userRepository.existsByUsername(username)) {
+                        existingUsernames.add(username); // Thêm username vào danh sách đã tồn tại
+                        continue; // Bỏ qua người dùng này nếu đã tồn tại
+                    }
+
+                    // Tạo mới User
                     User user = new User();
                     user.setUsername(username);
                     user.setEmail(email);
                     user.setPassword(passwordEncoder.encode("123")); //config password
                     Set<Role> roleSet = new HashSet<>();
                     Role role = roleRepository.findByName(roles).orElse(null);
-                    roleSet.add(role);
+                    if (role != null) {
+                        roleSet.add(role);
+                    }
                     // Set roles cho user
                     user.setRoles(roleSet);
                     // Thêm User vào danh sách
@@ -193,7 +202,13 @@ public class ExcelController {
             // Xử lý danh sách người dùng lưu vào database
             userRepository.saveAll(users);
 
-            return new ResponseEntity<>("File uploaded and processed successfully!", HttpStatus.OK);
+            // Tạo thông báo nếu có username đã tồn tại
+            String message = "File uploaded and processed successfully!";
+            if (!existingUsernames.isEmpty()) {
+                message += " Users with the following usernames already exist and were skipped: " + String.join(", ", existingUsernames);
+            }
+
+            return new ResponseEntity<>(message, HttpStatus.OK);
         } catch (IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>("Error processing the file", HttpStatus.INTERNAL_SERVER_ERROR);

@@ -51,14 +51,14 @@ public class AppFunctionController {
 //        return ResponseEntity.ok(roleService.getRoleById(roleId));
 //    }
 //
-//    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('DELETE_FUNCTION')")
+    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('DELETE_FUNCTION')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         appFunctionService.delete(id);
         return ResponseEntity.ok().body(Collections.singletonMap("message", "Xóa thành công"));
     }
 
-//    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('EDIT_FUNCTION')")
+    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('EDIT_FUNCTION')")
     @PutMapping("/update/{id}")
     ResponseEntity<AppFunctionResponse> updateFunction(@PathVariable Long id, @RequestBody AppFunctionRequest request) {
         return ResponseEntity.ok(appFunctionService.update(id, request));
