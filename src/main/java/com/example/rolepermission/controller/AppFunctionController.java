@@ -11,6 +11,7 @@ import com.example.rolepermission.dto.response.AppFunctionResponse;
 import com.example.rolepermission.dto.response.PermissionResponse;
 import com.example.rolepermission.dto.response.RoleResponse;
 import com.example.rolepermission.dto.response.UserResponse;
+import com.example.rolepermission.entity.Permission;
 import com.example.rolepermission.service.AppFunctionService;
 import com.example.rolepermission.service.PermissionService;
 import com.example.rolepermission.service.RoleService;
@@ -33,13 +34,13 @@ public class AppFunctionController {
     @Autowired
     AppFunctionService appFunctionService;
 
-    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('CREATE_FUNCTION')")
+//    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('CREATE_FUNCTION')")
     @PostMapping("/create")
     ResponseEntity<AppFunctionResponse> create(@RequestBody AppFunctionRequest request){
         return ResponseEntity.ok(appFunctionService.create(request));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_FUNCTION')")
+//    @PreAuthorize("hasAuthority('VIEW_FUNCTION')")
     @GetMapping("/get-all")
     ResponseEntity<List<AppFunctionResponse>> getAll(){
         return ResponseEntity.ok(appFunctionService.getAllFunctions());
@@ -50,17 +51,22 @@ public class AppFunctionController {
 //        return ResponseEntity.ok(roleService.getRoleById(roleId));
 //    }
 //
-    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('DELETE_FUNCTION')")
+//    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('DELETE_FUNCTION')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         appFunctionService.delete(id);
         return ResponseEntity.ok().body(Collections.singletonMap("message", "Xóa thành công"));
     }
 
-    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('EDIT_FUNCTION')")
+//    @PreAuthorize("hasAuthority('MANAGE_FUNCTION') and hasAuthority('EDIT_FUNCTION')")
     @PutMapping("/update/{id}")
-    ResponseEntity<AppFunctionResponse> updateRole(@PathVariable Long id, @RequestBody AppFunctionRequest request) {
+    ResponseEntity<AppFunctionResponse> updateFunction(@PathVariable Long id, @RequestBody AppFunctionRequest request) {
         return ResponseEntity.ok(appFunctionService.update(id, request));
     }
 
+    @GetMapping("/{functionId}/permissions")
+    public ResponseEntity<List<Permission>> getPermissionsByFunctionId(@PathVariable Long functionId) {
+        List<Permission> permissions = appFunctionService.getPermissionsByFunctionId(functionId);
+        return ResponseEntity.ok(permissions);
+    }
 }

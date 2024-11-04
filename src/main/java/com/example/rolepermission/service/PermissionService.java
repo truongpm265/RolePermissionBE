@@ -8,6 +8,7 @@ import com.example.rolepermission.entity.Permission;
 import com.example.rolepermission.exception.AppException;
 import com.example.rolepermission.exception.ErrorCode;
 import com.example.rolepermission.mapper.PermissionMapper;
+import com.example.rolepermission.repository.AppFunctionRepository;
 import com.example.rolepermission.repository.PermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class PermissionService {
     @Autowired
     PermissionRepository permissionRepository;
     PermissionMapper permissionMapper;
+    AppFunctionRepository functionRepository;
 
     public PermissionResponse create(PermissionRequest request) {
         Permission permission = permissionMapper.toPermission(request);
@@ -53,4 +55,11 @@ public class PermissionService {
 
         return permissionMapper.toPermissionResponse(permission);
     }
+
+//    public List<Permission> getPermissionsByFunctionId(Long functionId) {
+//        List<Permission> permissions = permissionRepository.findPermissionsByFunctionId(functionId);
+//
+//        return permissions;
+//    }
+
 }

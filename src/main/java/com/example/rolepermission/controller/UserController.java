@@ -35,7 +35,7 @@ public class UserController {
         return ResponseEntity.ok(userService.createUser(request));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_USER')")
+//    @PreAuthorize("hasAuthority('VIEW_USER')")
     @GetMapping
     ResponseEntity<List<UserResponse>> getAllUsers() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -64,11 +64,9 @@ public class UserController {
     @GetMapping("/user-details")
     public ResponseEntity<UserDetailsResponse> getUserDetails() {
         var user = userService.getUserDetails();
-        // Chuyển đổi thành UserDetailsResponse nếu cần
         UserDetailsResponse userDetailsResponse = new UserDetailsResponse();
         userDetailsResponse.setUsername(user.getUsername());
         userDetailsResponse.setRoles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()));
-        // Thêm logic để lấy các chức năng và quyền nếu cần
         userDetailsResponse.setFunctions(user.getRoles().stream()
                 .flatMap(role -> role.getFunctions().stream())
                 .collect(Collectors.toSet()));

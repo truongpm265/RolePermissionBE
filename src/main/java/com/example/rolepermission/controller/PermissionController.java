@@ -5,6 +5,7 @@ import com.example.rolepermission.dto.request.PermissionRequest;
 import com.example.rolepermission.dto.request.UserUpdateRequest;
 import com.example.rolepermission.dto.response.PermissionResponse;
 import com.example.rolepermission.dto.response.UserResponse;
+import com.example.rolepermission.entity.Permission;
 import com.example.rolepermission.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,4 +45,8 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.update(name, request));
     }
 
+//    @GetMapping("/functions/{functionId}")
+//    public List<Permission> getPermissionsByFunctionId(@PathVariable Long functionId) {
+//        return permissionService.getPermissionsByFunctionId(functionId);
+//    }
 }

@@ -102,4 +102,8 @@ public class RoleService {
 
         return roleMapper.toRoleResponse(role);
     }
+
+    public List<Role> getAllRolesObject() {
+       return roleRepository.findAll();
+    }
 }
