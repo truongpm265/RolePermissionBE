@@ -5,10 +5,14 @@ import com.example.rolepermission.dto.request.UserUpdateRequest;
 import com.example.rolepermission.dto.response.UserDetailsDTO;
 import com.example.rolepermission.dto.response.UserDetailsResponse;
 import com.example.rolepermission.dto.response.UserResponse;
+import com.example.rolepermission.entity.User;
+import com.example.rolepermission.entity.UserSearchRequest;
 import com.example.rolepermission.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -72,5 +76,17 @@ public class UserController {
                 .collect(Collectors.toSet()));
         return ResponseEntity.ok(userDetailsResponse);
     }
+
+    @GetMapping("/searchSQL")
+    public Page<User> searchStudents(UserSearchRequest request, Pageable pageable) {
+        return userService.search(request, pageable);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<List<User>> searchUsers(@RequestBody UserSearchRequest searchRequest) {
+        List<User> users = userService.searchUsers(searchRequest.getName(), searchRequest.getEmail(), searchRequest.getRole());
+        return ResponseEntity.ok(users);
+    }
+
 
 }

@@ -8,12 +8,19 @@ import com.example.rolepermission.dto.response.UserResponse;
 import com.example.rolepermission.entity.AppFunction;
 import com.example.rolepermission.entity.Role;
 import com.example.rolepermission.entity.User;
+import com.example.rolepermission.entity.UserSearchRequest;
 import com.example.rolepermission.exception.AppException;
 import com.example.rolepermission.exception.ErrorCode;
 import com.example.rolepermission.mapper.UserMapper;
 import com.example.rolepermission.repository.RoleRepository;
 import com.example.rolepermission.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,8 +28,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +44,9 @@ public class UserService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     UserMapper userMapper;
@@ -121,5 +133,60 @@ public class UserService {
                 .collect(Collectors.toList());
 
         return new UserDetailsDTO(username, roles, functions);
+    }
+
+    public Page<User> search(UserSearchRequest request, Pageable pageable) {
+        // Base SQL statements with 1=1 for easier condition appending
+        StringBuilder sql = new StringBuilder("SELECT s FROM User s WHERE 1=1");
+        StringBuilder sqlCount = new StringBuilder("SELECT COUNT(s) FROM User s WHERE 1=1");
+        StringBuilder where = new StringBuilder();
+
+        // Map to hold parameter values for the query
+        Map<String, Object> params = new HashMap<>();
+
+        // Add conditions dynamically based on non-null and non-empty values
+        if (request.getName() != null && !request.getName().isEmpty()) {
+            where.append(" AND s.name LIKE :name");
+            params.put("name", "%" + request.getName().trim().toLowerCase() + "%");
+        }
+
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            where.append(" AND s.email LIKE :email");
+            params.put("email", "%" + request.getEmail().trim().toLowerCase() + "%");
+        }
+
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            where.append(" AND s.role LIKE :role");
+            params.put("role", "%" + request.getRole().trim().toLowerCase() + "%");
+        }
+
+        // Finalize SQL statements with the constructed WHERE clause
+        sql.append(where);
+        sqlCount.append(where);
+
+        // Query execution (assuming EntityManager is used for the custom query)
+        Query query = entityManager.createQuery(sql.toString(), User.class);
+        Query countQuery = entityManager.createQuery(sqlCount.toString());
+
+        // Set parameters to both main and count queries
+        params.forEach((key, value) -> {
+            query.setParameter(key, value);
+            countQuery.setParameter(key, value);
+        });
+
+        // Pagination
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        // Execute and get results
+        List<User> employees = query.getResultList();
+        long total = (long) countQuery.getSingleResult();
+
+        // Return paginated result
+        return new PageImpl<>(employees, pageable, total);
+    }
+
+    public List<User> searchUsers(String name, String email, String role) {
+        return userRepository.searchUsers(name, email, role);
     }
 }
